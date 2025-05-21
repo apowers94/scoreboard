@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Advanced Scoreboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .header, .scores, .stats, .team-inputs {
+      margin-bottom: 20px;
+    }
+    .scores {
+      display: flex;
+      justify-content: space-around;
+    }
+    .team {
+      text-align: center;
+    }
+    .score {
+      font-size: 48px;
+      margin: 10px 0;
+    }
+    .controls button {
+      font-size: 20px;
+      margin: 0 5px;
+    }
+    .team-inputs input {
+      margin: 5px 0;
+      width: 100%;
+      padding: 6px;
+    }
+    .stat-section {
+      margin-bottom: 20px;
+    }
+    .stat-field {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .stat-field input[type="text"],
+    .stat-field input[type="number"] {
+      padding: 6px;
+      flex: 1;
+    }
+    .stat-field button {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .add-btn, .save-btn {
+      padding: 6px 12px;
+      font-size: 14px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .save-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Scoreboard App</h2>
+      <label for="sport">Choose Sport:</label>
+      <select id="sport">
+        <option value="Football">Football</option>
+        <option value="Basketball">Basketball</option>
+        <option value="Soccer">Soccer</option>
+        <option value="Baseball">Baseball</option>
+      </select>
+    </div>
+
+    <div class="team-inputs">
+      <label>Team 1 Name: <input type="text" id="team1Name" value="Team A"></label>
+      <label>Team 2 Name: <input type="text" id="team2Name" value="Team B"></label>
+    </div>
+
+    <div class="scores">
+      <div class="team" id="team1">
+        <div class="name" id="displayTeam1">Team A</div>
+        <div class="score" id="score1">0</div>
+        <div class="controls">
+          <button onclick="changeScore('team1', 1)">+</button>
+          <button onclick="changeScore('team1', -1)">-</button>
+        </div>
+      </div>
+      <div class="team" id="team2">
+        <div class="name" id="displayTeam2">Team B</div>
+        <div class="score" id="score2">0</div>
+        <div class="controls">
+          <button onclick="changeScore('team2', 1)">+</button>
+          <button onclick="changeScore('team2', -1)">-</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team 1 Stats -->
+    <div class="stats stat-section">
+      <h3>Stats - <span id="statsTeam1Label">Team A</span></h3>
+      <div id="team1StatsContainer"></div>
+      <button class="add-btn" onclick="addStatField('team1')">+ Add Stat</button>
+    </div>
+
+    <!-- Team 2 Stats -->
+    <div class="stats stat-section">
+      <h3>Stats - <span id="statsTeam2Label">Team B</span></h3>
+      <div id="team2StatsContainer"></div>
+      <button class="add-btn" onclick="addStatField('team2')">+ Add Stat</button>
+    </div>
+
+    <button class="save-btn" onclick="saveStats()">💾 Save Stats</button>
+  </div>
+
+  <script>
+    let scores = { team1: 0, team2: 0 };
+    let statCounts = { team1: 0, team2: 0 };
+
+    function changeScore(team, delta) {
+      scores[team] += delta;
+      if (scores[team] < 0) scores[team] = 0;
+      document.getElementById(team === 'team1' ? 'score1' : 'score2').innerText = scores[team];
+    }
+
+    document.getElementById('team1Name').addEventListener('input', function() {
+      document.getElementById('displayTeam1').innerText = this.value;
+      document.getElementById('statsTeam1Label').innerText = this.value;
+    });
+
+    document.getElementById('team2Name').addEventListener('input', function() {
+      document.getElementById('displayTeam2').innerText = this.value;
+      document.getElementById('statsTeam2Label').innerText = this.value;
+    });
+
+    document.getElementById('sport').addEventListener('change', function() {
+      alert('Sport changed to ' + this.value + '. You can implement sport-specific behavior here.');
+    });
+
+    function addStatField(team) {
+      statCounts[team]++;
+      const container = document.getElementById(`${team}StatsContainer`);
+      const statDiv = document.createElement('div');
+      statDiv.className = 'stat-field';
+      statDiv.innerHTML = `
+        <input type="text" placeholder="Stat name (e.g. Goals)">
+        <input type="number" placeholder="Value">
+        <button onclick="this.parentElement.remove()">🗑️</button>
+      `;
+      container.appendChild(statDiv);
+    }
+
+    function saveStats() {
+      const data = {
+        team1: {
+          name: document.getElementById('team1Name').value,
+          score: scores.team1,
+          stats: collectStats('team1')
+        },
+        team2: {
+          name: document.getElementById('team2Name').value,
+          score: scores.team2,
+          stats: collectStats('team2')
+        },
+        sport: document.getElementById('sport').value
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'scoreboard_stats.json';
+      link.click();
+    }
+
+    function collectStats(team) {
+      const container = document.getElementById(`${team}StatsContainer`);
+      const stats = [];
+      container.querySelectorAll('.stat-field').forEach(field => {
+        const name = field.querySelector('input[type="text"]').value;
+        const value = parseInt(field.querySelector('input[type="number"]').value, 10);
+        if (name && !isNaN(value)) {
+          stats.push({ name, value });
+        }
+      });
+      return stats;
+    }
+  </script>
+</body>
+</html>
